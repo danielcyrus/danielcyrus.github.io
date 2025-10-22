@@ -1,5 +1,397 @@
-<html>
-<body>
-hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Cyrus | Developer Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #text-console {
+            font-family: 'Roboto Mono', monospace;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            overflow-y: auto;
+        }
+        .cursor {
+            animation: blink 1s infinite;
+            display: inline-block;
+            vertical-align: top;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .blink-enter {
+            animation: blink 1.2s infinite;
+        }
+
+        /* CRITICAL: Initial state for the loading animation */
+        #canvas-container {
+            opacity: 0; /* Model starts hidden */
+            background-color: #111; /* Dark background during loading */
+            transition: opacity 1.5s ease-in; /* Prepare for the fade-in */
+        }
+    </style>
+    <!-- Three.js Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
+    <!-- FBXLoader for r128 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script> 
+</head>
+<body class="bg-black text-gray-300">
+
+    <div id="app" class="flex flex-col lg:flex-row h-screen">
+        <!-- Navigation/Header -->
+        <nav class="absolute top-0 left-0 p-4 z-10 text-white font-mono text-sm hidden sm:block">
+            <span class="hover:text-green-400 transition cursor-pointer pr-4">HOME</span>
+            <span class="hover:text-green-400 transition cursor-pointer pr-4">PROJECTS</span>
+            <span class="hover:text-green-400 transition cursor-pointer pr-4">ACADEMIC</span>
+            <span class="hover:text-green-400 transition cursor-pointer pr-4">PROFESSIONAL</span>
+            <span class="hover:text-green-400 transition cursor-pointer">CONTACT</span>
+        </nav>
+        
+        <!-- Console Text Area -->
+        <div class="lg:w-1/2 p-8 lg:p-12 overflow-hidden flex flex-col justify-end">
+            <div id="text-console" class="text-green-400 text-sm md:text-base h-full p-4"></div>
+           <p class="mt-4 text-xs text-gray-500 text-right">** Mouse over the 3D model to interact and rotate (Y-axis only). **</p>
+        </div>
+
+        <!-- Three.js Canvas Container -->
+        <div id="canvas-container" class="lg:w-1/2 h-full flex items-center justify-center p-4">
+            <!-- Loading message overlay (optional, but good practice) -->
+            <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center text-white text-xl font-bold bg-gray-900 opacity-90 transition-opacity duration-500">
+                Loading Assets...
+            </div>
+            <canvas id="three-canvas" class="w-full h-full"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBALS ---
+        let isDragging = false;
+        let previousMousePosition = { x: 0 };
+        const canvasContainer = document.getElementById('canvas-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const textConsole = document.getElementById('text-console');
+
+        // --- THREE.JS GLOBALS & Loading Flags ---
+        let scene, camera, renderer, object;
+        let videoTexture = null;
+        let videoElement = null;
+        let screenMesh = null;
+        
+        let loadingDone = false;    // True when everything is displayed
+        let resourcesLoaded = false;// True when FBX/all model assets are loaded
+        let videoReady = false;     // True when video element has loaded enough data
+
+        // --- Typing Sequence Logic ---
+        const typingSequence = [
+            { text: "$ portfolio_console --init", speed: 40 },
+            { text: "[system] Initializing developer profile...", speed: 40 },
+            { text: "> Analyzing skillset: AI/ML Developer, Robotic Designer, Game Dev.", speed: 40 },
+            { text: "// I architect **intelligent systems** (AI/ML), turning data into dynamic capabilities and optimizing complex processes.", speed: 30 },
+            { text: "// I design the future of hardware (Robotics), where machines interface with intent and execute physical tasks with precision.", speed: 30 },
+            { text: "// I build **immersive worlds** (Game Development), creating interactive experiences one line of code and one asset at a time.", speed: 30 },
+            { text: "$ ready", speed: 100 }
+        ];
+
+        let sequenceIndex = 0;
+        let isTyping = false;
+        let waitingForEnter = false;
+        let autoContinueTimer = null;
+
+        function getConsoleContent() {
+            return textConsole.innerHTML.replace(/<span class="cursor text-xl">_<\/span>$/, '');
+        }
+
+        function setConsoleContent(content) {
+            textConsole.innerHTML = content + '<span class="cursor text-xl">_</span>';
+        }
+
+        function typeLine(line, callback) {
+            let currentChar = 0;
+            const content = getConsoleContent();
+            const lines = content.split('\n');
+            lines.push('');
+            const cleanLine = line.text.replace(/\*\*(.*?)\*\*/g, '$1');
+
+            function type() {
+                if (!isTyping) return;
+                if (currentChar < cleanLine.length) {
+                    const currentText = cleanLine.substring(0, currentChar + 1);
+                    lines[lines.length - 1] = currentText;
+                    setConsoleContent(lines.join('\n'));
+                    currentChar++;
+                    setTimeout(type, line.speed);
+                } else {
+                    const formattedLine = line.text.replace(/\*\*(.*?)\*\*/g, '<span class="text-white font-bold">$1</span>');
+                    lines[lines.length - 1] = formattedLine;
+                    setConsoleContent(lines.join('\n'));
+                    callback();
+                }
+            }
+            type();
+        }
+
+        function processNextStep() {
+            if (sequenceIndex >= typingSequence.length) return;
+
+            const line = typingSequence[sequenceIndex];
+            isTyping = true;
+            waitingForEnter = false;
+            clearTimeout(autoContinueTimer);
+
+            typeLine(line, () => {
+                isTyping = false;
+                waitingForEnter = true;
+                const content = getConsoleContent();
+                setConsoleContent(content + '\n<span class="text-gray-500 text-xs blink-enter">[press Enter]</span>');
+
+                autoContinueTimer = setTimeout(() => {
+                    if (waitingForEnter && !isTyping) {
+                        continueToNextLine();
+                    }
+                }, 3000);
+            });
+        }
+
+        function continueToNextLine() {
+            waitingForEnter = false;
+            clearTimeout(autoContinueTimer);
+            const content = getConsoleContent().replace(/\n<span class="text-gray-500 text-xs blink-enter">\[press Enter\]<\/span>$/, '');
+            setConsoleContent(content);
+            sequenceIndex++;
+            if (sequenceIndex < typingSequence.length) {
+                processNextStep();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Enter" && waitingForEnter && !isTyping) {
+                continueToNextLine();
+            }
+        });
+
+        function startTypingSequence() {
+            processNextStep();
+        }
+
+
+        // --- THREE.JS LOADING AND DISPLAY LOGIC ---
+
+        function checkLoadingStatus() {
+            // Check if both the model resources (FBX/textures) AND the video data are loaded
+            if (resourcesLoaded && videoReady) {
+                if (loadingDone) return; 
+                loadingDone = true;
+
+                console.log("ALL RESOURCES READY. Fading in model.");
+
+                // 1. Hide the loading overlay
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 500); // Wait for opacity transition
+
+                // 2. Fade in the canvas container (model)
+                canvasContainer.style.opacity = '1';
+            }
+        }
+
+        function createPlaceholderObject() {
+            const geometry = new THREE.OctahedronGeometry(1.5, 0); 
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x00ff00,
+                emissive: 0x005500,
+                specular: 0x99FF99,
+                shininess: 150
+            });
+            object = new THREE.Mesh(geometry, material);
+            scene.add(object);
+            
+            // If placeholder, consider loading done immediately
+            resourcesLoaded = true;
+            checkLoadingStatus(); 
+        }
+
+        function handleModelLoad(fbxObject) {
+            fbxObject.scale.set(0.0017, 0.0017, 0.0017);
+            fbxObject.rotation.y = -1.9;
+            
+            // --- VIDEO SETUP ---
+            videoElement = document.createElement('video');
+            videoElement.src = './asset/retro_video.mp4'; // Assuming this path is now correct
+            videoElement.loop = true;
+            videoElement.muted = true; 
+            videoElement.playsInline = true; // Crucial for mobile
+            videoElement.preload = 'auto'; 
+            
+            // 1. Traverse the model to find the screen mesh and store it
+            fbxObject.traverse((child) => {
+                if (child.isMesh) {
+                    if (child.material) {
+                        child.material.transparent = false;
+                        child.material.opacity = 1.0;
+                        child.material.depthWrite = true;
+                        child.material.needsUpdate = true;
+                    }
+
+                    if (child.name.toLowerCase().includes("screen") || (child.material && child.material.name && child.material.name.toLowerCase().includes("screen"))) {
+                        screenMesh = child;
+                        // Temporarily assign a plain black material until the video loads
+                        screenMesh.material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                    }
+                }
+            });
+
+            // 2. Wait for the video to load enough data before playing and creating the texture
+            videoElement.addEventListener('loadeddata', () => {
+                // Video data is ready for the first frame
+                videoTexture = new THREE.VideoTexture(videoElement);
+                videoReady = true;
+                // CRITICAL FIX: Disable mipmaps for video texture
+                videoTexture.minFilter = THREE.LinearFilter;
+                videoTexture.magFilter = THREE.LinearFilter;
+                videoTexture.generateMipmaps = false; 
+
+                if (screenMesh) {
+                    screenMesh.material = new THREE.MeshBasicMaterial({ map: videoTexture });
+                    screenMesh.material.needsUpdate = true;
+                }
+
+                videoReady = true; // Set the video ready flag
+                
+                // Attempt to play the video now (muted autoplay is generally allowed)
+               videoElement.play().catch(e => {
+            console.warn("Video Autoplay Failed:", e.message);
+            // Add a fallback user interaction trigger
+            document.addEventListener('click', manualPlay, { once: true });
+            document.addEventListener('touchstart', manualPlay, { once: true });
+        });
+                
+                checkLoadingStatus(); // Check combined status
+            });
+
+            object = fbxObject;
+            scene.add(object);
+        }
+        function manualPlay() {
+    if (videoElement && videoElement.paused) {
+        videoElement.play().then(() => {
+            console.log("Video playback started via user interaction.");
+        }).catch(e => {
+            console.error("Manual playback also failed:", e);
+        });
+    }
+}
+
+        function loadFBXModel(manager) {
+            if (typeof THREE.FBXLoader === 'undefined') {
+                createPlaceholderObject();
+                return;
+            }
+            // Use the manager for the FBXLoader
+            const loader = new THREE.FBXLoader(manager); 
+            const modelUrl = 'retro.fbx'; 
+            loader.load(modelUrl, handleModelLoad, undefined, (err) => {
+                console.error('FBX load failed, using placeholder:', err);
+                createPlaceholderObject();
+                resourcesLoaded = true;
+                checkLoadingStatus(); 
+            });
+        }
+
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('three-canvas'), 
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            window.addEventListener('resize', onWindowResize, false);
+            const ambientLight = new THREE.AmbientLight(0xbbaaaa, 0.5);
+            scene.add(ambientLight);
+            const dir1 = new THREE.DirectionalLight(0xffaaaa, 0.8);
+            dir1.position.set(5, 5, 5);
+            scene.add(dir1);
+            const dir2 = new THREE.DirectionalLight(0x00aaff, 0.8);
+            dir2.position.set(-5, -5, -5);
+            scene.add(dir2);
+            
+            // --- Loading Manager Setup ---
+            const manager = new THREE.LoadingManager();
+            manager.onLoad = function ( ) {
+                resourcesLoaded = true; // FBX and associated files (textures) are loaded
+                checkLoadingStatus();
+            };
+
+            loadFBXModel(manager); // Pass the manager to the loader
+            
+            // --- Interaction Setup ---
+            const canvas = document.getElementById('three-canvas');
+            const rotateModel = (deltaX) => {
+                if (object) object.rotation.y += deltaX * 0.01;
+            };
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX };
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                rotateModel(deltaX);
+                previousMousePosition = { x: e.clientX };
+            });
+            canvas.addEventListener('mouseup', () => { isDragging = false; });
+            canvas.addEventListener('mouseleave', () => { isDragging = false; });
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    previousMousePosition = { x: e.touches[0].clientX };
+                    e.preventDefault(); 
+                }
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                rotateModel(deltaX);
+                previousMousePosition = { x: e.touches[0].clientX };
+                e.preventDefault(); 
+            });
+            canvas.addEventListener('touchend', () => { isDragging = false; });
+        }
+        
+        function onWindowResize() {
+            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // CRITICAL FIX: Continuously update the video texture only if it's playing
+            if (videoTexture && videoElement && videoElement.readyState >= videoElement.HAVE_CURRENT_DATA) {
+                videoTexture.needsUpdate = true;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        window.onload = function() {
+            initThree();
+            animate();
+            startTypingSequence();
+        };
+    </script>
 </body>
 </html>
