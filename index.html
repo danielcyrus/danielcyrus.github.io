@@ -1,78 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daniel Cyrus | Developer Portfolio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            background-color: #000;
-        }
-        #text-console {
-            font-family: 'Roboto Mono', monospace;
-            white-space: pre-wrap;
-            line-height: 1.5;
-            overflow-y: auto;
-        }
-        .cursor {
-            animation: blink 1s infinite;
-            display: inline-block;
-            vertical-align: top;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        .blink-enter {
-            animation: blink 1.2s infinite;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daniel Cyrus | Developer Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      overflow-x: hidden;
+    }
+    #text-console {
+      font-family: 'Roboto Mono', monospace;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      overflow-y: auto;
+    }
+    .cursor {
+      animation: blink 1s infinite;
+      display: inline-block;
+      vertical-align: top;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .blink-enter {
+      animation: blink 1.2s infinite;
+    }
+    #canvas-container {
+      opacity: 0;
+      background-color: #111;
+      transition: opacity 1.5s ease-in;
+    }
+  </style>
 
-        /* CRITICAL: Initial state for the loading animation */
-        #canvas-container {
-            opacity: 0; /* Model starts hidden */
-            background-color: #111; /* Dark background during loading */
-            transition: opacity 1.5s ease-in; /* Prepare for the fade-in */
-        }
-    </style>
-    <!-- Three.js Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
-    <!-- FBXLoader for r128 -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script> 
+  <!-- Three.js Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
 </head>
 <body class="bg-black text-gray-300">
 
-    <div id="app" class="flex flex-col lg:flex-row h-screen">
-        <!-- Navigation/Header -->
-        <nav class="absolute top-0 left-0 p-4 z-10 text-white font-mono text-sm hidden sm:block">
-            <span class="hover:text-green-400 transition cursor-pointer pr-4">HOME</span>
-            <span class="hover:text-green-400 transition cursor-pointer pr-4">PROJECTS</span>
-            <span class="hover:text-green-400 transition cursor-pointer pr-4">ACADEMIC</span>
-            <span class="hover:text-green-400 transition cursor-pointer pr-4">PROFESSIONAL</span>
-            <span class="hover:text-green-400 transition cursor-pointer">CONTACT</span>
-        </nav>
-        
-        <!-- Console Text Area -->
-        <div class="lg:w-1/2 p-8 lg:p-12 overflow-hidden flex flex-col justify-end">
-            <div id="text-console" class="text-green-400 text-sm md:text-base h-full p-4"></div>
-           <p class="mt-4 text-xs text-gray-500 text-right">** Mouse over the 3D model to interact and rotate (Y-axis only). **</p>
-        </div>
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 w-full bg-black bg-opacity-80 backdrop-blur-sm text-white font-mono z-50">
+    <div class="flex justify-between items-center p-4">
+      <div class="text-green-400 font-bold">DANIEL CYRUS</div>
+      <!-- Hamburger Button -->
+      <button id="menu-button" class="sm:hidden focus:outline-none">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
 
-        <!-- Three.js Canvas Container -->
-        <div id="canvas-container" class="lg:w-1/2 h-full flex items-center justify-center p-4">
-            <!-- Loading message overlay (optional, but good practice) -->
-            <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center text-white text-xl font-bold bg-gray-900 opacity-90 transition-opacity duration-500">
-                Loading Assets...
-            </div>
-            <canvas id="three-canvas" class="w-full h-full"></canvas>
-        </div>
+      <!-- Desktop Menu -->
+      <div class="hidden sm:flex space-x-4 text-sm">
+        <span class="hover:text-green-400 cursor-pointer">HOME</span>
+        <span class="hover:text-green-400 cursor-pointer">PROJECTS</span>
+        <span class="hover:text-green-400 cursor-pointer">ACADEMIC</span>
+        <span class="hover:text-green-400 cursor-pointer">PROFESSIONAL</span>
+        <span class="hover:text-green-400 cursor-pointer">CONTACT</span>
+      </div>
     </div>
 
-    <script>
-        // --- GLOBALS ---
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobile-menu" class="hidden sm:hidden flex flex-col bg-black px-4 pb-4 space-y-2 text-sm">
+      <span class="hover:text-green-400 cursor-pointer">HOME</span>
+      <span class="hover:text-green-400 cursor-pointer">PROJECTS</span>
+      <span class="hover:text-green-400 cursor-pointer">ACADEMIC</span>
+      <span class="hover:text-green-400 cursor-pointer">PROFESSIONAL</span>
+      <span class="hover:text-green-400 cursor-pointer">CONTACT</span>
+    </div>
+  </nav>
+
+  <!-- Main App -->
+  <div id="app" class="flex flex-col-reverse sm:flex-col-reverse lg:flex-row h-screen pt-16">
+    <!-- Console Text Area -->
+    <div class="lg:w-1/2 p-8 lg:p-12 flex flex-col justify-end">
+      <div id="text-console" class="text-green-400 text-sm md:text-base h-full p-4"></div>
+      <p class="mt-4 text-xs text-gray-500 text-right">** Mouse over the 3D model to interact and rotate (Y-axis only). **</p>
+    </div>
+
+    <!-- Three.js Canvas -->
+    <div id="canvas-container" class="lg:w-1/2 h-[50vh] lg:h-full flex items-center justify-center p-4">
+      <div id="loading-overlay"
+           class="absolute inset-0 flex items-center justify-center text-white text-xl font-bold bg-gray-900 opacity-90 transition-opacity duration-500">
+        Loading Assets...
+      </div>
+      <canvas id="three-canvas" class="w-full h-full"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // --- Hamburger Menu Logic ---
+    const menuButton = document.getElementById('menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    mobileMenu.querySelectorAll('span').forEach(item => {
+      item.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+      });
+    });
+ // --- GLOBALS ---
         let isDragging = false;
         let previousMousePosition = { x: 0 };
         const canvasContainer = document.getElementById('canvas-container');
@@ -325,7 +361,7 @@
             const dir2 = new THREE.DirectionalLight(0x00aaff, 0.8);
             dir2.position.set(-5, -5, -5);
             scene.add(dir2);
-            
+            scene.background = new THREE.Color(0x000000);
             // --- Loading Manager Setup ---
             const manager = new THREE.LoadingManager();
             manager.onLoad = function ( ) {
@@ -371,10 +407,19 @@
         }
         
         function onWindowResize() {
-            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
-        }
+    // 1. Get the current, correct dimensions of the parent container
+    const width = canvasContainer.clientWidth;
+    const height = canvasContainer.clientHeight;
+    
+    // 2. Update the camera's aspect ratio
+    // This is crucial for preventing stretching/distortion
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix(); // Always call this after changing camera properties
+
+    // 3. Update the renderer size
+    // This resizes the WebGL viewport and the canvas element itself
+    renderer.setSize(width, height);
+}
 
         function animate() {
             requestAnimationFrame(animate);
@@ -392,6 +437,27 @@
             animate();
             startTypingSequence();
         };
-    </script>
+        document.addEventListener('DOMContentLoaded', () => {
+    // Check if we're on a mobile-sized screen before adding the listener
+    if (window.innerWidth < 640) { // 640px is Tailwind's 'sm' breakpoint
+        const menuButton = document.getElementById('menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (menuButton && mobileMenu) {
+            menuButton.addEventListener('click', () => {
+                // Toggle the 'hidden' class to show/hide the menu
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Optional: Close the menu when a link is clicked
+            mobileMenu.querySelectorAll('span').forEach(item => {
+                 item.addEventListener('click', () => {
+                     mobileMenu.classList.add('hidden');
+                 });
+            });
+        }
+    }
+});
+  </script>
 </body>
 </html>
