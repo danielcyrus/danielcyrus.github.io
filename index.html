@@ -362,7 +362,42 @@
             line-height: 1.7;
             color: var(--muted);
         }
+.game-banner {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
 
+.game-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.game-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    object-fit: cover;
+}
+
+.playstore-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 18px;
+    background: #34a853;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.playstore-btn:hover {
+    opacity: 0.9;
+}
         /* ─── CONTACT SECTION ─────────────────────────────── */
         #contact {
             background: var(--bg);
@@ -639,17 +674,32 @@
 
         <div class="games-grid">
 
-            <div class="game-card">
-                <div class="game-thumb">
-                    <span class="game-thumb-label">VOLT</span>
-                    <span class="game-badge">Out Now</span>
-                </div>
-                <div class="game-info">
-                    <div class="game-genre">Action · Roguelite</div>
-                    <div class="game-title">Volt Surge</div>
-                    <p class="game-desc">A fast-paced roguelite where you harness lightning to carve through procedurally generated dungeons. No two runs are the same.</p>
-                </div>
+           <div class="game-card">
+    <div class="game-thumb">
+        <img src="catchme.png" alt="Catch Me Banner" class="game-banner">
+        <span class="game-badge">Out Now</span>
+    </div>
+
+    <div class="game-info">
+        <div class="game-header">
+            <img src="catchme-icon.png" alt="Catch Me Icon" class="game-icon">
+            <div>
+                <div class="game-genre">Multiplayer · Casual</div>
+                <div class="game-title">Catch Me</div>
             </div>
+        </div>
+
+        <p class="game-desc">
+            A fast-paced two-player mobile game where players compete to catch and outsmart each other.
+        </p>
+
+        <a href="https://play.google.com/store/apps/details?id=com.dcstudio.catch_me"
+           target="_blank"
+           class="playstore-btn">
+            Get it on Google Play
+        </a>
+    </div>
+</div>
 
             <div class="game-card">
                 <div class="game-thumb">
