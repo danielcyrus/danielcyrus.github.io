@@ -398,6 +398,88 @@
 .playstore-btn:hover {
     opacity: 0.9;
 }
+
+/* ─── ABOUT & TEAM ───────────────────────── */
+
+#about,
+#team {
+    background: var(--bg);
+    position: relative;
+}
+
+.about-content {
+    max-width: 900px;
+}
+
+.about-content p {
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--muted);
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.member-card {
+    background: var(--bg3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: 0.25s;
+}
+
+.member-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255,215,0,0.3);
+}
+
+.member-photo {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    background: linear-gradient(135deg,#111,#222);
+}
+
+.member-info {
+    padding: 24px;
+}
+
+.member-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+.member-role {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 8px 0 14px;
+}
+
+.member-bio {
+    color: var(--muted);
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+.member-links {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+}
+
+.member-links a {
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 14px;
+}
+        
         /* ─── CONTACT SECTION ─────────────────────────────── */
         #contact {
             background: var(--bg);
@@ -727,6 +809,71 @@
         </div>
     </section>
 
+    <!-- ─── ABOUT ───────────────────────────── -->
+<section id="about">
+    <div class="section-label">Who We Are</div>
+    <div class="section-title">About DC Studios</div>
+
+    <div class="about-content">
+        <p>
+            DC Studios is an independent game development studio focused on
+            creating engaging multiplayer, action, and immersive gaming
+            experiences. We combine innovative gameplay mechanics with
+            modern technology to deliver games that are accessible,
+            entertaining, and memorable for players worldwide.
+        </p>
+
+        <br>
+
+        <p>
+            Our mission is to build games that bring people together,
+            encourage creativity, and provide unforgettable experiences
+            across mobile and PC platforms.
+        </p>
+    </div>
+</section>
+
+<!-- ─── TEAM ────────────────────────────── -->
+<section id="team">
+    <div class="section-label">Meet The Team</div>
+    <div class="section-title">Team</div>
+
+    <div class="team-grid">
+
+        <div class="member-card">
+            <img src="daniel.jpg" alt="Daniel Cyrus" class="member-photo">
+
+            <div class="member-info">
+                <div class="member-name">Daniel Cyrus</div>
+
+                <div class="member-role">
+                    Founder · Lead Developer · AI Researcher
+                </div>
+
+                <div class="member-bio">
+                    Daniel Cyrus is the founder of DC Studios and an
+                    experienced AI researcher, roboticist, and software
+                    engineer. With over 10 years of experience in computer
+                    science and robotics, he combines artificial
+                    intelligence, game development, and innovative design
+                    to create unique interactive experiences. Alongside game
+                    development, Daniel conducts research in explainable AI,
+                    symbolic reasoning, and intelligent robotic systems.
+                </div>
+
+                <div class="member-links">
+                    <a href="https://github.com/hmlr-lab" target="_blank">
+                        GitHub
+                    </a>
+                    <a href="mailto:danielcyrus63@gmail.com">
+                        Email
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
     <!-- ─── CONTACT ───────────────────────────────────────── -->
     <section id="contact">
         <div class="section-label">Get In Touch</div>
